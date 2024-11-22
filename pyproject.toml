@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "sql-query-obfuscator"
+version = "0.1.0"
+description = "An automated tool to ingest your SQL QUERY (not the data) and obfuscate column names, table names, and other aspects of the query itself."
+authors = ["ivan-the-terrible"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+sqlglot = "^25.32.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
