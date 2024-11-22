@@ -4,6 +4,11 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
+from sqlglot import exp, parse_one
+
+COLUMN_COUNTER = 0
+TABLE_COUNTER = 0
+
 
 def parse_input() -> Tuple[str, str]:
     """
@@ -56,6 +61,18 @@ def check_input(sql_input, output_path) -> Tuple[str, str]:
     return os.path.abspath(sql_input), os.path.abspath(output_path)
 
 
+def transformer(node):
+    if isinstance(node, exp.Column):
+        global COLUMN_COUNTER
+        COLUMN_COUNTER += 1
+        return "column_" + str(COLUMN_COUNTER)
+    elif isinstance(node, exp.Table):
+        global TABLE_COUNTER
+        TABLE_COUNTER += 1
+        return "table_" + str(TABLE_COUNTER)
+    return node
+
+
 def obfuscate_sql_query(sql_file) -> str:
     """
     Obfuscates the SQL query.
@@ -66,7 +83,21 @@ def obfuscate_sql_query(sql_file) -> str:
     with open(sql_file, "r") as file:
         sql_query = file.read()
 
-    return sql_query
+    if sql_query.count(";") > 1:
+        sql_queries = sql_query.split(";")
+    else:
+        sql_queries = [sql_query]
+
+    obfuscated_sql_queries = ""
+    for sql_query in sql_queries:
+        if sql_query.strip():
+            expression_tree = parse_one(sql_query)
+
+            transformed_tree = expression_tree.transform(transformer)
+            obfuscated_sql = transformed_tree.sql()
+            obfuscated_sql_queries += obfuscated_sql + ";\n"
+
+    return obfuscated_sql_queries
 
 
 def write_result(obfuscated_sql, output_path):
