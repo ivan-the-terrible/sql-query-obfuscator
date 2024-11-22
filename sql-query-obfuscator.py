@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from pathlib import Path
 from typing import Tuple
 
 
@@ -42,21 +43,17 @@ def check_input(sql_input, output_path) -> Tuple[str, str]:
         logging.error(f"{sql_input} is not a file.")
         sys.exit(1)
 
-    # check for absolute path
-    if not os.path.exists(sql_input):
-        sql_input = os.path.join(current_directory, sql_input)
-
-    if os.path.exists(output_path) or os.path.exists(
-        os.path.join(current_directory, output_path)
-    ):
-        logging.error(f"{output_path} already exists.")
-        sys.exit(1)
-
     if os.path.isdir(output_path):
-        sql_file_name = os.path.basename(sql_input)
+        sql_file_name = Path(sql_input).stem
         output_path = os.path.join(output_path, f"obfuscated-{sql_file_name}.sql")
+    else:
+        if os.path.exists(output_path) or os.path.exists(
+            os.path.join(current_directory, output_path)
+        ):
+            logging.error(f"{output_path} already exists.")
+            sys.exit(1)
 
-    return sql_input, output_path
+    return os.path.abspath(sql_input), output_path
 
 
 def obfuscate_sql_query(sql_file) -> str:
