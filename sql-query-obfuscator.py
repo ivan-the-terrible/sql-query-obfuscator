@@ -53,7 +53,7 @@ def check_input(sql_input, output_path) -> Tuple[str, str]:
             logging.error(f"{output_path} already exists.")
             sys.exit(1)
 
-    return os.path.abspath(sql_input), output_path
+    return os.path.abspath(sql_input), os.path.abspath(output_path)
 
 
 def obfuscate_sql_query(sql_file) -> str:
