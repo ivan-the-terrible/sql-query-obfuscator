@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
-from sqlglot import exp, parse_one
+from sqlglot import errors, exp, parse_one
 
 COLUMN_COUNTER = 0
 TABLE_COUNTER = 0
@@ -70,6 +70,8 @@ def transformer(node):
         global TABLE_COUNTER
         TABLE_COUNTER += 1
         return "table_" + str(TABLE_COUNTER)
+    elif isinstance(node, exp.Comment):
+        return None
     return node
 
 
@@ -80,7 +82,7 @@ def obfuscate_sql_query(sql_file) -> str:
     Args:
       sql_file: SQL file to be obfuscated
     """
-    with open(sql_file, "r") as file:
+    with open(sql_file, "r", encoding="utf-8") as file:
         sql_query = file.read()
 
     if sql_query.count(";") > 1:
@@ -91,8 +93,10 @@ def obfuscate_sql_query(sql_file) -> str:
     obfuscated_sql_queries = ""
     for sql_query in sql_queries:
         if sql_query.strip():
-            expression_tree = parse_one(sql_query)
-
+            try:
+                expression_tree = parse_one(sql_query)
+            except errors.ParseError as e:
+                logging.error(e.errors)
             transformed_tree = expression_tree.transform(transformer)
             obfuscated_sql = transformed_tree.sql()
             obfuscated_sql_queries += obfuscated_sql + ";\n"
